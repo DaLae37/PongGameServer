@@ -12,8 +12,8 @@ void StartGame(Room *room, std::thread*gameThread) {
 }
 
 int main() {
-    std::queue<CLIENT> clientList;
-    std::queue<GAME> gameList;
+    std::deque<CLIENT> clientList;
+    std::deque<GAME> gameList;
 
     WSADATA wsaData;
     SOCKET serverSock = socket(PF_INET, SOCK_STREAM, 0);
@@ -43,27 +43,30 @@ int main() {
             SOCKADDR_IN clientAddr;
             SOCKET clientSock = accept(serverSock, (SOCKADDR*)&clientAddr, &len);
             CLIENT client(clientSock, clientAddr);
-            clientList.push(client);
-
+            clientList.push_back(client);
+            
             if (clientList.size() >= 2) {
                 for (int i = 0; i < clientList.size() / 2; i++) {
                     CLIENT client1 = clientList.front();
-                    clientList.pop();
+                    clientList.pop_front();
                     CLIENT client2 = clientList.front();
-                    clientList.pop();
+                    clientList.pop_front();
 
                     Room* room = new Room;
                     room->SetPlayer(client1.first, client1.second, client1.first, client2.second);
                     std::thread* gameThread = new std::thread(StartGame, room, gameThread);
 
                     GAME game(room, gameThread);
-                    gameList.push(game);
+                    gameList.push_back(game);
                 }
+            }
+            else {
+                clientList.front().first;
             }
 
             if (gameList.front().first->getIsGameEnd()) {
                 GAME game = gameList.front();
-                gameList.pop();
+                gameList.pop_front();
                 delete game.first;
                 game.second->join();
             }
@@ -72,7 +75,7 @@ int main() {
 
     while (!gameList.empty()) {
         GAME game = gameList.front();
-        gameList.pop();
+        gameList.pop_front();
         delete game.first;
         game.second->join();
     }

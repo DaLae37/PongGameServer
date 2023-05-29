@@ -2,7 +2,7 @@
 #pragma warning(disable:4996)
 #include <iostream>
 #include <utility>
-#include <queue>
+#include <deque>
 #include <thread>
 #include <WinSock2.h>
 
