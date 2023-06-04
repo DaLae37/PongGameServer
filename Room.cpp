@@ -3,6 +3,8 @@
 Room::Room() {
     isPlayerSet = false;
     isGameEnd = false;
+    isLeftReady = false;
+    isLeftReady = false;
 }
 
 Room::~Room() {
@@ -28,23 +30,33 @@ void Room::SetPlayer(SOCKET leftPlayer, SOCKADDR_IN leftPlayerAddr, SOCKET right
     this->rightPlayerAddr = rightPlayerAddr;
     sendData[6] = '0';
     send(rightPlayer, sendData, BUFFER_SIZE, 0);
+
+    isPlayerSet = true;
 }
 
 void Room::Update() {
-    if (isPlayerSet) {
-        if (recv(leftPlayer, leftBuffer, BUFFER_SIZE, 0) == SOCKET_ERROR) {
-            Release();
-            return;
+    if (recv(leftPlayer, leftBuffer, BUFFER_SIZE, 0) == SOCKET_ERROR) {
+        Release();
+        return;
+    }
+    if (recv(rightPlayer, rightBuffer, BUFFER_SIZE, 0) == SOCKET_ERROR) {
+        Release();
+        return;
+    }
+    if (isLeftReady && isRightReady) {
+        send(rightPlayer, leftBuffer, BUFFER_SIZE, 0);
+        send(leftPlayer, rightBuffer, BUFFER_SIZE, 0);
+    }
+    else {
+        if (leftBuffer[5] == '1') {
+            isLeftReady = true;
+            char data[BUFFER_SIZE] = {'0','0','0','0','1','1',';',';'};
+            send(rightPlayer, data, BUFFER_SIZE, 0);
         }
-        else {
-            send(rightPlayer, leftBuffer, BUFFER_SIZE, 0);
-        }
-        if(recv(rightPlayer, leftBuffer, BUFFER_SIZE, 0) == SOCKET_ERROR){
-            Release();
-            return;
-        }
-        else {
-            send(leftPlayer, rightBuffer, BUFFER_SIZE, 0);
+        if (rightBuffer[5] == '1') {
+            isRightReady = true;
+            char data[BUFFER_SIZE] = { '0','0','0','0','1','0',';',';' };
+            send(rightPlayer, data, BUFFER_SIZE, 0);
         }
     }
 }

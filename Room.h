@@ -11,6 +11,8 @@ private :
 
 	bool isPlayerSet;
 	bool isGameEnd;
+	bool isLeftReady;
+	bool isRightReady;
 
 	char leftBuffer[BUFFER_SIZE];
 	char rightBuffer[BUFFER_SIZE];
