@@ -16,6 +16,10 @@ int main() {
     std::deque<GAME> gameList;
 
     WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        std::cout << "Ver 2.2 Erorr" << std::endl;
+        return 1;
+    }
     SOCKET serverSock = socket(PF_INET, SOCK_STREAM, 0);
     SOCKADDR_IN addr;
     memset(&addr, 0, sizeof(addr));
@@ -23,10 +27,6 @@ int main() {
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
     addr.sin_port = htons(3737);
 
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        std::cout << "Ver 2.2 Erorr" << std::endl;
-        return 1;
-    }
     if (bind(serverSock, (SOCKADDR*)&addr, sizeof(SOCKADDR_IN)) == SOCKET_ERROR) {
         std::cout << "Bind Failed" << std::endl;
         return 1;
@@ -37,7 +37,7 @@ int main() {
     }
 
     std::cout << "Server Start" << std::endl;
-    char buffer[BUFFER_SIZE];
+    char buffer[BUFFER_SIZE] = { '0','0','0','0','0','0',';' };
     while (true) {
         if (gameList.size() < MAX_GAME) {
             int len = sizeof(SOCKADDR_IN);
@@ -47,6 +47,7 @@ int main() {
             clientList.push_back(client);
             
             for (auto client = clientList.begin(); client < clientList.end(); client++) {
+                send(client->first, buffer, BUFFER_SIZE, 0);
                 if (recv(client->first, buffer, BUFFER_SIZE, 0) == SOCKET_ERROR) {
                     closesocket(client->first);
                     clientList.erase(client);
@@ -62,18 +63,20 @@ int main() {
                     clientList.pop_front();
 
                     Room* room = new Room;
-                    room->SetPlayer(client1.first, client1.second, client1.first, client2.second);
+                    room->SetPlayer(client1.first, client1.second, client2.first, client2.second);
                     std::thread* gameThread = new std::thread(StartGame, room, gameThread);
 
                     GAME game(room, gameThread);
                     gameList.push_back(game);
                 }
             }
-            if (gameList.front().first->getIsGameEnd()) {
-                GAME game = gameList.front();
-                gameList.pop_front();
-                delete game.first;
-                game.second->join();
+            if (gameList.size() > 0) {
+                if (gameList.front().first->getIsGameEnd()) {
+                    GAME game = gameList.front();
+                    gameList.pop_front();
+                    delete game.first;
+                    game.second->join();
+                }
             }
         }
     }
