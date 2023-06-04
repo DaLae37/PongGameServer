@@ -11,6 +11,9 @@ private :
 
 	bool isPlayerSet;
 	bool isGameEnd;
+
+	char leftBuffer[BUFFER_SIZE];
+	char rightBuffer[BUFFER_SIZE];
 public :
 	Room();
 	~Room();
@@ -18,5 +21,6 @@ public :
 	bool getIsPlayerSet();
 	bool getIsGameEnd();
 	void Update();
+	void Release();
 	void SetPlayer(SOCKET leftPlayer, SOCKADDR_IN leftPlayerAddr, SOCKET rightPlayer, SOCKADDR_IN rightPlayerAddr);
 };

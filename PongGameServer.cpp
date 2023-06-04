@@ -37,6 +37,7 @@ int main() {
     }
 
     std::cout << "Server Start" << std::endl;
+    char buffer[BUFFER_SIZE];
     while (true) {
         if (gameList.size() < MAX_GAME) {
             int len = sizeof(SOCKADDR_IN);
@@ -45,6 +46,14 @@ int main() {
             CLIENT client(clientSock, clientAddr);
             clientList.push_back(client);
             
+            for (auto client = clientList.begin(); client < clientList.end(); client++) {
+                if (recv(client->first, buffer, BUFFER_SIZE, 0) == SOCKET_ERROR) {
+                    closesocket(client->first);
+                    clientList.erase(client);
+                    continue;
+                }
+            }
+
             if (clientList.size() >= 2) {
                 for (int i = 0; i < clientList.size() / 2; i++) {
                     CLIENT client1 = clientList.front();
@@ -60,10 +69,6 @@ int main() {
                     gameList.push_back(game);
                 }
             }
-            else {
-                clientList.front().first;
-            }
-
             if (gameList.front().first->getIsGameEnd()) {
                 GAME game = gameList.front();
                 gameList.pop_front();
